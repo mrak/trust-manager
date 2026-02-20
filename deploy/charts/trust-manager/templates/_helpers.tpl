@@ -77,6 +77,7 @@ Namespaced resources rules
   verbs: ["get","list","create","patch","watch","delete"]
 
 - apiGroups:
+  - "" {{/* TODO(erikgb): Remove; MIGRATION to new events API group. */}}
   - "events.k8s.io"
   resources:
   - "events"
