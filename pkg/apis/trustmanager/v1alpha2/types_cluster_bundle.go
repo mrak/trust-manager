@@ -152,7 +152,7 @@ type PKCS12 struct {
 	// +optional
 	// +kubebuilder:validation:MinLength=0
 	// +kubebuilder:validation:MaxLength=128
-	Password *string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty"` // #nosec G117 -- field is exported for JSON serialization, not a hardcoded secret
 
 	// profile specifies the certificate encryption algorithms and the HMAC algorithm
 	// used to create the PKCS12 trust store.
