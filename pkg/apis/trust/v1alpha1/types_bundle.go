@@ -162,7 +162,7 @@ type JKS struct {
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=128
 	// +kubebuilder:default=changeit
-	Password *string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty"` // #nosec G117 -- field is exported for JSON serialization, not a hardcoded secret
 }
 
 // PKCS12 specifies additional target PKCS#12 files
@@ -176,7 +176,7 @@ type PKCS12 struct {
 	// +kubebuilder:validation:MinLength=0
 	// +kubebuilder:validation:MaxLength=128
 	// +kubebuilder:default=""
-	Password *string `json:"password,omitempty"`
+	Password *string `json:"password,omitempty"` // #nosec G117 -- field is exported for JSON serialization, not a hardcoded secret
 
 	// profile specifies the certificate encryption algorithms and the HMAC algorithm
 	// used to create the PKCS12 trust store.
