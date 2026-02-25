@@ -200,6 +200,7 @@ func Convert_v1alpha1_TargetTemplate_To_v1alpha2_KeyValueTarget(in *TargetTempla
 			return err
 		}
 	}
+	out.Type = in.Type
 	return nil
 }
 
@@ -353,5 +354,6 @@ func Convert_v1alpha2_KeyValueTarget_To_v1alpha1_TargetTemplate(in *trustv1alpha
 			return err
 		}
 	}
+	out.Type = in.Type
 	return nil
 }

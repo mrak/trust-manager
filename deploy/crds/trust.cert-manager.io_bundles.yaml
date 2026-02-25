@@ -361,6 +361,11 @@ spec:
                             minProperties: 1
                             type: object
                         type: object
+                      type:
+                        description: |-
+                          type is the type of the target Secret. Only applicable when the target is a Secret.
+                          If not set, defaults to Opaque.
+                        type: string
                     required:
                     - key
                     type: object
@@ -444,6 +449,11 @@ spec:
                             minProperties: 1
                             type: object
                         type: object
+                      type:
+                        description: |-
+                          type is the type of the target Secret. Only applicable when the target is a Secret.
+                          If not set, defaults to Opaque.
+                        type: string
                     required:
                     - key
                     type: object

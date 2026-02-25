@@ -996,6 +996,81 @@ func Test_ApplyTarget_Secret(t *testing.T) {
 	}
 }
 
+func Test_ApplyTarget_Secret_Type(t *testing.T) {
+	tests := map[string]struct {
+		secretType     corev1.SecretType
+		expTypeInPatch bool
+	}{
+		"empty type should not set type in patch": {
+			secretType:     "",
+			expTypeInPatch: false,
+		},
+		"kubernetes.io/tls type should be set in patch": {
+			secretType:     corev1.SecretTypeTLS,
+			expTypeInPatch: true,
+		},
+		"Opaque type should be set in patch": {
+			secretType:     corev1.SecretTypeOpaque,
+			expTypeInPatch: true,
+		},
+	}
+
+	for name, tt := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			fakeClient := fake.NewClientBuilder().
+				WithReturnManagedFields().
+				WithScheme(test.Scheme).
+				Build()
+
+			var resourcePatches []any
+			r := &Reconciler{
+				Client: fakeClient,
+				Cache:  fakeClient,
+				PatchResourceOverwrite: func(ctx context.Context, obj any) error {
+					resourcePatches = append(resourcePatches, obj)
+					return nil
+				},
+			}
+
+			certPool := util.NewCertPool()
+			err := certPool.AddCertsFromPEM([]byte(data))
+			assert.NoError(t, err)
+
+			spec := trustapi.BundleSpec{
+				Target: trustapi.BundleTarget{
+					Secret: &trustapi.TargetTemplate{
+						Key:  key,
+						Type: tt.secretType,
+					},
+				},
+			}
+
+			_, ctx := ktesting.NewTestContext(t)
+			needsUpdate, err := r.ApplyTarget(ctx, Resource{
+				Kind:           KindSecret,
+				NamespacedName: types.NamespacedName{Name: bundleName, Namespace: namespace},
+			}, &trustapi.Bundle{
+				ObjectMeta: metav1.ObjectMeta{Name: bundleName},
+				Spec:       spec,
+			}, source.BundleData{CertPool: certPool})
+			assert.NoError(t, err)
+			assert.True(t, needsUpdate)
+
+			if assert.Len(t, resourcePatches, 1) {
+				secret := resourcePatches[0].(*coreapplyconfig.SecretApplyConfiguration)
+				if tt.expTypeInPatch {
+					assert.NotNil(t, secret.Type)
+					assert.Equal(t, tt.secretType, *secret.Type)
+				} else {
+					assert.Nil(t, secret.Type)
+				}
+			}
+		})
+	}
+}
+
 func Test_TrustBundleHash(t *testing.T) {
 	type inputArgs struct {
 		data              []byte
@@ -1111,6 +1186,34 @@ func Test_TrustBundleHash(t *testing.T) {
 							Annotations: map[string]string{"annotation1": "value1"},
 							Labels:      map[string]string{"annotation1": "value2"},
 						},
+					},
+				},
+			},
+		},
+		"secret type changes hash": {
+			input: inputArgs{
+				data: []byte("data"),
+				targetTemplate: &trustapi.TargetTemplate{
+					Type: corev1.SecretTypeTLS,
+				},
+			},
+			matches: []inputArgs{
+				{
+					data: []byte("data"),
+					targetTemplate: &trustapi.TargetTemplate{
+						Type: corev1.SecretTypeTLS,
+					},
+				},
+			},
+			mismatches: []inputArgs{
+				{
+					data:           []byte("data"),
+					targetTemplate: &trustapi.TargetTemplate{},
+				},
+				{
+					data: []byte("data"),
+					targetTemplate: &trustapi.TargetTemplate{
+						Type: corev1.SecretTypeOpaque,
 					},
 				},
 			},

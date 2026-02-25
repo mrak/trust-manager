@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/validation/field"
 	"k8s.io/klog/v2/ktesting"
@@ -470,6 +471,40 @@ func Test_validate(t *testing.T) {
 						ConfigMap: &trustapi.TargetTemplate{Key: "test-1"},
 						NamespaceSelector: &metav1.LabelSelector{
 							MatchLabels: map[string]string{"foo": "bar"},
+						},
+					},
+				},
+			},
+			expErr: nil,
+		},
+		"type on configMap target should be rejected": {
+			bundle: &trustapi.Bundle{
+				Spec: trustapi.BundleSpec{
+					Sources: []trustapi.BundleSource{
+						{InLine: ptr.To("foo")},
+					},
+					Target: trustapi.BundleTarget{
+						ConfigMap: &trustapi.TargetTemplate{
+							Key:  "bar",
+							Type: corev1.SecretTypeTLS,
+						},
+					},
+				},
+			},
+			expErr: field.ErrorList{
+				field.Forbidden(field.NewPath("spec", "target", "configMap", "type"), "type may only be set on secret targets"),
+			},
+		},
+		"type on secret target should be accepted": {
+			bundle: &trustapi.Bundle{
+				Spec: trustapi.BundleSpec{
+					Sources: []trustapi.BundleSource{
+						{InLine: ptr.To("foo")},
+					},
+					Target: trustapi.BundleTarget{
+						Secret: &trustapi.TargetTemplate{
+							Key:  "bar",
+							Type: corev1.SecretTypeTLS,
 						},
 					},
 				},

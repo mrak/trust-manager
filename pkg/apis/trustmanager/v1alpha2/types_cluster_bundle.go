@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha2
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -127,6 +128,7 @@ type DefaultCAsSource struct {
 // BundleTarget is the target resource that the Bundle will sync all source
 // data to.
 // +kubebuilder:validation:AtLeastOneOf=configMap;secret
+// +kubebuilder:validation:XValidation:rule="!has(self.configMap) || !has(self.configMap.type)",message="type may only be set on secret targets"
 type BundleTarget struct {
 	// configMap is the target ConfigMap in Namespaces that all Bundle source data will be synced to.
 	// +optional
@@ -223,6 +225,11 @@ type KeyValueTarget struct {
 	// metadata is an optional set of labels and annotations to be copied to the target.
 	// +optional
 	Metadata *TargetMetadata `json:"metadata,omitempty"`
+
+	// type is the type of the target Secret. Only applicable when the target is a Secret.
+	// If not set, defaults to Opaque.
+	// +optional
+	Type corev1.SecretType `json:"type,omitempty"`
 }
 
 // GetAnnotations returns the annotations to be copied to the target or an empty map if there are no annotations.

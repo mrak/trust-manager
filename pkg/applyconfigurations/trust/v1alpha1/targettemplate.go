@@ -17,6 +17,10 @@ limitations under the License.
 
 package v1alpha1
 
+import (
+	v1 "k8s.io/api/core/v1"
+)
+
 // TargetTemplateApplyConfiguration represents a declarative configuration of the TargetTemplate type for use
 // with apply.
 //
@@ -26,6 +30,9 @@ type TargetTemplateApplyConfiguration struct {
 	Key *string `json:"key,omitempty"`
 	// metadata is an optional set of labels and annotations to be copied to the target.
 	Metadata *TargetMetadataApplyConfiguration `json:"metadata,omitempty"`
+	// type is the type of the target Secret. Only applicable when the target is a Secret.
+	// If not set, defaults to Opaque.
+	Type *v1.SecretType `json:"type,omitempty"`
 }
 
 // TargetTemplateApplyConfiguration constructs a declarative configuration of the TargetTemplate type for use with
@@ -47,5 +54,13 @@ func (b *TargetTemplateApplyConfiguration) WithKey(value string) *TargetTemplate
 // If called multiple times, the Metadata field is set to the value of the last call.
 func (b *TargetTemplateApplyConfiguration) WithMetadata(value *TargetMetadataApplyConfiguration) *TargetTemplateApplyConfiguration {
 	b.Metadata = value
+	return b
+}
+
+// WithType sets the Type field in the declarative configuration to the given value
+// and returns the receiver, so that objects can be built by chaining "With" function invocations.
+// If called multiple times, the Type field is set to the value of the last call.
+func (b *TargetTemplateApplyConfiguration) WithType(value v1.SecretType) *TargetTemplateApplyConfiguration {
+	b.Type = &value
 	return b
 }

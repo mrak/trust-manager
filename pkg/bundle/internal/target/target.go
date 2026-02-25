@@ -233,6 +233,10 @@ func (r *Reconciler) applySecret(
 		WithLabels(bundleTarget.Secret.GetLabels()).
 		WithData(data)
 
+	if bundleTarget.Secret.Type != "" {
+		patch = patch.WithType(bundleTarget.Secret.Type)
+	}
+
 	if _, err = r.patchSecret(ctx, patch); err != nil {
 		return false, fmt.Errorf("failed to patch %s %s: %w", target.Kind, target.NamespacedName, err)
 	}
@@ -407,6 +411,10 @@ func TrustBundleHash(data []byte, additionalFormats *trustapi.AdditionalFormats,
 	}
 	if additionalFormats != nil && additionalFormats.PKCS12 != nil && additionalFormats.PKCS12.Password != nil {
 		_, _ = hash.Write([]byte(*additionalFormats.PKCS12.Password))
+	}
+
+	if target != nil && target.Type != "" {
+		_, _ = hash.Write([]byte(target.Type))
 	}
 
 	// Add Target annotations and labels to the hash so it becomes aware of changes and triggers an update.

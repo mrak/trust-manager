@@ -20,6 +20,7 @@ import (
 	"context"
 	"strings"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2/ktesting"
 	"k8s.io/utils/ptr"
@@ -356,6 +357,28 @@ var _ = Describe("ClusterBundle Validation", func() {
 			})
 
 			targetObjectAsserts()
+		})
+
+		It("should reject type on configMap target", func() {
+			bundle.Spec.Target.ConfigMap = &trustmanagerapi.KeyValueTarget{
+				Data: []trustmanagerapi.TargetKeyValue{{
+					Key: "ca-bundle.crt",
+				}},
+				Type: corev1.SecretTypeTLS,
+			}
+
+			expectedErr := "type may only be set on secret targets"
+			Expect(cl.Create(ctx, bundle)).Should(MatchError(ContainSubstring(expectedErr)))
+		})
+
+		It("should accept type on secret target", func() {
+			bundle.Spec.Target.Secret = &trustmanagerapi.KeyValueTarget{
+				Data: []trustmanagerapi.TargetKeyValue{{
+					Key: "ca-bundle.crt",
+				}},
+				Type: corev1.SecretTypeTLS,
+			}
+			Expect(cl.Create(ctx, bundle)).To(Succeed())
 		})
 	})
 })

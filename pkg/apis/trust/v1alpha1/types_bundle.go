@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -245,6 +246,11 @@ type TargetTemplate struct {
 	// metadata is an optional set of labels and annotations to be copied to the target.
 	// +optional
 	Metadata *TargetMetadata `json:"metadata,omitempty"`
+
+	// type is the type of the target Secret. Only applicable when the target is a Secret.
+	// If not set, defaults to Opaque.
+	// +optional
+	Type corev1.SecretType `json:"type,omitempty"`
 }
 
 // GetAnnotations returns the annotations to be copied to the target or an empty map if there are no annotations.
